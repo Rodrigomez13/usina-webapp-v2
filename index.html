@@ -47,7 +47,8 @@
       color: #fff;
       padding: 4px;
       border-radius: 4px;
-      width: 70px;
+      width: 75px;
+      text-align: center;
     }
 
     input[type="text"] { width: 100px; }
@@ -112,16 +113,6 @@
       background-color: limegreen;
       margin-right: 6px;
     }
-
-    .delete-btn {
-      background: crimson;
-      color: white;
-      border: none;
-      padding: 2px 6px;
-      font-size: 11px;
-      border-radius: 4px;
-      cursor: pointer;
-    }
   </style>
 </head>
 <body>
@@ -135,7 +126,7 @@
         <th>ID</th><th>Cuenta</th><th>Anuncio</th>
         <th>Presupuesto</th><th>API</th><th>Estado</th>
         <th>Leads</th><th>Cargas</th><th>Gasto</th><th>Gasto + Imp</th>
-        <th>Conv %</th><th>$Lead</th><th>$Carga</th><th>$Carga + Imp</th><th>🗑</th>
+        <th>Conv %</th><th>$Lead</th><th>$Carga</th><th>$Carga + Imp</th><th></th>
       </tr>
     </thead>
     <tbody></tbody>
@@ -175,6 +166,12 @@
       </p>
       <button class="btn" onclick="confirmAd()">✅ Confirmar</button>
     </div>
+  </div>
+
+  <!-- DASHBOARD GLOBAL -->
+  <div id="dashboard-global" style="margin-top: 40px;">
+    <h2>📈 Dashboard Global</h2>
+    <div id="kpis" style="display: flex; gap: 16px; flex-wrap: wrap;"></div>
   </div>
 
   <script src="script.js"></script>
