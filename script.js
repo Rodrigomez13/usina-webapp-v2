@@ -37,15 +37,14 @@ function renderAdsTable() {
 
   adsList
     .filter(ad => !yaActivos.includes(ad.id))
-    .forEach((ad, i) => {
+    .forEach((ad) => {
       const row = document.createElement("tr");
       row.innerHTML = `
         <td>${ad.id}</td>
         <td>${ad.anuncio}</td>
-        <td>${ad.campaña}</td>
         <td>${ad.cuenta}</td>
         <td>$${ad.cpc.toFixed(2)}</td>
-        <td><button class="btn" onclick="openConfigModal(adsList[${i}])">Agregar</button></td>
+        <td><button class="btn" onclick='openConfigModal(${JSON.stringify(ad)})'>Agregar</button></td>
       `;
       tbody.appendChild(row);
     });
@@ -83,51 +82,80 @@ function confirmAd() {
 function renderServer4() {
   const tbody = document.querySelector("#server4Table tbody");
   tbody.innerHTML = "";
-  loadAds().forEach((ad, i) => {
-    const gastoImp = ad.gasto * IMP;
-    const conv = ad.leads > 0 ? (ad.cargas / ad.leads * 100) : 0;
-    const precioLead = ad.leads > 0 ? (ad.gasto / ad.leads) : 0;
-    const precioCarga = ad.cargas > 0 ? (ad.gasto / ad.cargas) : 0;
-    const precioCargaImp = precioCarga * IMP;
 
-    const tieneDatos = ad.leads > 0 || ad.cargas > 0 || ad.gasto > 0;
-    const claseFila = (ad.estado !== 'ACTIVA' && tieneDatos) ? 'inactivo' : '';
+  const ads = loadAds();
+  const activos = ads.filter(ad => ad.estado === 'ACTIVA');
+  const inactivos = ads.filter(ad => ad.estado !== 'ACTIVA');
 
-    const row = document.createElement("tr");
-    row.className = claseFila;
-    row.innerHTML = `
-      <td>${ad.id}</td>
-      <td>${ad.anuncio}</td>
-      <td>${ad.campaña}</td>
-      <td>${ad.cuenta}</td>
-      <td><input type="number" value="${ad.presupuesto}" onchange="updateAd(${i}, 'presupuesto', this.value)" /></td>
-      <td>
-        <select class="api" onchange="updateAd(${i}, 'api', this.value)">
-          <option ${ad.api === 'VERONICA' ? 'selected' : ''}>VERONICA</option>
-          <option ${ad.api === 'PERLA' ? 'selected' : ''}>PERLA</option>
-          <option ${ad.api === 'MEREDITH' ? 'selected' : ''}>MEREDITH</option>
-        </select>
-      </td>
-      <td>
-        <select class="estado" onchange="updateAd(${i}, 'estado', this.value)">
-          <option ${ad.estado === 'ACTIVA' ? 'selected' : ''}>ACTIVA</option>
-          <option ${ad.estado === 'INACTIVA' ? 'selected' : ''}>INACTIVA</option>
-          <option ${ad.estado === 'CONVERTIR' ? 'selected' : ''}>CONVERTIR</option>
-          <option ${ad.estado === 'RELANZAR' ? 'selected' : ''}>RELANZAR</option>
-          <option ${ad.estado === 'ADS ERROR' ? 'selected' : ''}>ADS ERROR</option>
-        </select>
-      </td>
-      <td><input type="number" value="${ad.leads}" onchange="updateAd(${i}, 'leads', this.value)" /></td>
-      <td><input type="number" value="${ad.cargas}" onchange="updateAd(${i}, 'cargas', this.value)" /></td>
-      <td><input type="number" value="${ad.gasto}" onchange="updateAd(${i}, 'gasto', this.value)" /></td>
-      <td>$${gastoImp.toFixed(2)}</td>
-      <td>${conv.toFixed(2)}%</td>
-      <td>$${precioLead.toFixed(2)}</td>
-      <td>$${precioCarga.toFixed(2)}</td>
-      <td>$${precioCargaImp.toFixed(2)}</td>
-    `;
-    tbody.appendChild(row);
-  });
+  // Activos
+  activos.forEach((ad, i) => tbody.appendChild(renderAdRow(ad, i)));
+
+  // Línea divisoria
+  if (inactivos.length) {
+    const sep = document.createElement("tr");
+    sep.className = "divisor";
+    sep.innerHTML = `<td colspan="15"></td>`;
+    tbody.appendChild(sep);
+  }
+
+  // Inactivos
+  inactivos.forEach((ad, i) => tbody.appendChild(renderAdRow(ad, i, true)));
+}
+
+function renderAdRow(ad, i, inactivo = false) {
+  const gastoImp = ad.gasto * IMP;
+  const conv = ad.leads > 0 ? (ad.cargas / ad.leads * 100) : 0;
+  const precioLead = ad.leads > 0 ? (ad.gasto / ad.leads) : 0;
+  const precioCarga = ad.cargas > 0 ? (ad.gasto / ad.cargas) : 0;
+  const precioCargaImp = precioCarga * IMP;
+  const tieneDatos = ad.leads > 0 || ad.cargas > 0 || ad.gasto > 0;
+
+  const row = document.createElement("tr");
+  row.className = inactivo && tieneDatos ? "inactivo" : "";
+
+  const borrar = (!tieneDatos && ad.estado !== "ACTIVA")
+    ? `<button class="delete-btn" onclick="deleteAd('${ad.id}')">X</button>` : "";
+
+  row.innerHTML = `
+    <td>${ad.id}</td>
+    <td>${ad.cuenta}</td>
+    <td>${ad.anuncio}</td>
+    <td><input type="number" value="${ad.presupuesto}" onchange="updateAd(${i}, 'presupuesto', this.value)" /></td>
+    <td>
+      <select class="api" onchange="updateAd(${i}, 'api', this.value)">
+        <option ${ad.api === 'VERONICA' ? 'selected' : ''}>VERONICA</option>
+        <option ${ad.api === 'PERLA' ? 'selected' : ''}>PERLA</option>
+        <option ${ad.api === 'MEREDITH' ? 'selected' : ''}>MEREDITH</option>
+      </select>
+    </td>
+    <td>
+      ${ad.estado === 'ACTIVA' ? '<span class="status-dot"></span>' : ''}
+      <select class="estado" onchange="updateAd(${i}, 'estado', this.value)">
+        <option ${ad.estado === 'ACTIVA' ? 'selected' : ''}>ACTIVA</option>
+        <option ${ad.estado === 'INACTIVA' ? 'selected' : ''}>INACTIVA</option>
+        <option ${ad.estado === 'CONVERTIR' ? 'selected' : ''}>CONVERTIR</option>
+        <option ${ad.estado === 'RELANZAR' ? 'selected' : ''}>RELANZAR</option>
+        <option ${ad.estado === 'ADS ERROR' ? 'selected' : ''}>ADS ERROR</option>
+      </select>
+    </td>
+    <td><input type="number" value="${ad.leads}" onchange="updateAd(${i}, 'leads', this.value)" /></td>
+    <td><input type="number" value="${ad.cargas}" onchange="updateAd(${i}, 'cargas', this.value)" /></td>
+    <td><input type="number" value="${ad.gasto}" onchange="updateAd(${i}, 'gasto', this.value)" /></td>
+    <td>$${gastoImp.toFixed(2)}</td>
+    <td>${conv.toFixed(2)}%</td>
+    <td>$${precioLead.toFixed(2)}</td>
+    <td>$${precioCarga.toFixed(2)}</td>
+    <td>$${precioCargaImp.toFixed(2)}</td>
+    <td>${borrar}</td>
+  `;
+  return row;
+}
+
+function deleteAd(id) {
+  const ads = loadAds().filter(ad => ad.id !== id);
+  saveAds(ads);
+  renderServer4();
+  renderDashboardResumen();
 }
 
 function updateAd(index, field, value) {
