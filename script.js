@@ -92,7 +92,7 @@ function renderAdRow(ad, i, inactivo = false) {
     <td>${checkbox} ${ad.id}</td>
     <td>${ad.cuenta}</td>
     <td>${ad.anuncio}</td>
-    <td><span>${ad.presupuesto}</span> <button class='btn' onclick='editPresupuesto(${i})'>✏️</button></td>
+    <td><span>${ad.presupuesto}</span> <button class='btn edit-lapiz' onclick='editPresupuesto(${i})'>✏️</button></td>
     <td><select class="api" onchange="updateAd(${i}, 'api', this.value)" ${disabled}>
       <option ${ad.api === 'VERONICA' ? 'selected' : ''}>VERONICA</option>
       <option ${ad.api === 'PERLA' ? 'selected' : ''}>PERLA</option>
