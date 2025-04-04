@@ -3,6 +3,7 @@ const IMP = 1.12;
 const endpoint = 'https://script.google.com/macros/s/AKfycbzKwlkbBjaXyeSoVhJWs7hsjAiBIEQIIzpa8p_Y95ZgtMj7O0hfay-u83i9O9NKTK4_TA/exec?action=getAvailableAds';
 
 let adsList = [];
+let selectedAd = null;
 
 function openModal() {
   document.getElementById("adsModal").style.display = "flex";
@@ -18,13 +19,24 @@ function closeModal() {
   document.getElementById("adsModal").style.display = "none";
 }
 
+function openConfigModal(ad) {
+  selectedAd = ad;
+  document.getElementById("inputPresupuesto").value = '';
+  document.getElementById("inputAPI").value = '';
+  document.getElementById("configModal").style.display = "flex";
+}
+
+function closeConfigModal() {
+  document.getElementById("configModal").style.display = "none";
+}
+
 function renderAdsTable() {
   const tbody = document.querySelector("#adsTable tbody");
   tbody.innerHTML = "";
-  const yaActivos = loadAds().map(ad => ad.id); // IDs activos
+  const yaActivos = loadAds().map(ad => ad.id);
 
   adsList
-    .filter(ad => !yaActivos.includes(ad.id)) // excluir los ya activos
+    .filter(ad => !yaActivos.includes(ad.id))
     .forEach((ad, i) => {
       const row = document.createElement("tr");
       row.innerHTML = `
@@ -33,29 +45,39 @@ function renderAdsTable() {
         <td>${ad.campaña}</td>
         <td>${ad.cuenta}</td>
         <td>$${ad.cpc.toFixed(2)}</td>
-        <td><button class="btn" onclick="addAd(${i})">Agregar</button></td>
+        <td><button class="btn" onclick="openConfigModal(adsList[${i}])">Agregar</button></td>
       `;
       tbody.appendChild(row);
     });
 }
 
-function addAd(index) {
-  const ad = adsList[index];
+function confirmAd() {
+  const presupuesto = parseFloat(document.getElementById("inputPresupuesto").value);
+  const api = document.getElementById("inputAPI").value;
+
+  if (!presupuesto || !api) {
+    alert("Por favor completá presupuesto y seleccioná API");
+    return;
+  }
+
   const newAd = {
-    ...ad,
-    presupuesto: 0,
-    api: '',
+    ...selectedAd,
+    presupuesto,
+    api,
     estado: 'ACTIVA',
     leads: 0,
     cargas: 0,
     gasto: 0
   };
+
   const ads = loadAds();
   ads.push(newAd);
   saveAds(ads);
+
+  closeConfigModal();
+  closeModal();
   renderServer4();
   renderDashboardResumen();
-  closeModal();
 }
 
 function renderServer4() {
@@ -68,15 +90,33 @@ function renderServer4() {
     const precioCarga = ad.cargas > 0 ? (ad.gasto / ad.cargas) : 0;
     const precioCargaImp = precioCarga * IMP;
 
+    const tieneDatos = ad.leads > 0 || ad.cargas > 0 || ad.gasto > 0;
+    const claseFila = (ad.estado !== 'ACTIVA' && tieneDatos) ? 'inactivo' : '';
+
     const row = document.createElement("tr");
+    row.className = claseFila;
     row.innerHTML = `
       <td>${ad.id}</td>
       <td>${ad.anuncio}</td>
       <td>${ad.campaña}</td>
       <td>${ad.cuenta}</td>
       <td><input type="number" value="${ad.presupuesto}" onchange="updateAd(${i}, 'presupuesto', this.value)" /></td>
-      <td><input type="text" value="${ad.api}" onchange="updateAd(${i}, 'api', this.value)" /></td>
-      <td>${ad.estado}</td>
+      <td>
+        <select class="api" onchange="updateAd(${i}, 'api', this.value)">
+          <option ${ad.api === 'VERONICA' ? 'selected' : ''}>VERONICA</option>
+          <option ${ad.api === 'PERLA' ? 'selected' : ''}>PERLA</option>
+          <option ${ad.api === 'MEREDITH' ? 'selected' : ''}>MEREDITH</option>
+        </select>
+      </td>
+      <td>
+        <select class="estado" onchange="updateAd(${i}, 'estado', this.value)">
+          <option ${ad.estado === 'ACTIVA' ? 'selected' : ''}>ACTIVA</option>
+          <option ${ad.estado === 'INACTIVA' ? 'selected' : ''}>INACTIVA</option>
+          <option ${ad.estado === 'CONVERTIR' ? 'selected' : ''}>CONVERTIR</option>
+          <option ${ad.estado === 'RELANZAR' ? 'selected' : ''}>RELANZAR</option>
+          <option ${ad.estado === 'ADS ERROR' ? 'selected' : ''}>ADS ERROR</option>
+        </select>
+      </td>
       <td><input type="number" value="${ad.leads}" onchange="updateAd(${i}, 'leads', this.value)" /></td>
       <td><input type="number" value="${ad.cargas}" onchange="updateAd(${i}, 'cargas', this.value)" /></td>
       <td><input type="number" value="${ad.gasto}" onchange="updateAd(${i}, 'gasto', this.value)" /></td>
@@ -92,7 +132,7 @@ function renderServer4() {
 
 function updateAd(index, field, value) {
   const ads = loadAds();
-  ads[index][field] = field === 'api' ? value : parseFloat(value);
+  ads[index][field] = field === 'api' || field === 'estado' ? value : parseFloat(value);
   saveAds(ads);
   renderServer4();
   renderDashboardResumen();
@@ -107,7 +147,6 @@ function saveAds(ads) {
   localStorage.setItem(SERVER_KEY, JSON.stringify(ads));
 }
 
-// Reset cada 24 hs
 (function resetIfExpired() {
   const last = localStorage.getItem('server4_last_reset');
   const now = Date.now();

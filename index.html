@@ -10,7 +10,7 @@
       padding: 20px;
       background: #111;
       color: #ddd;
-      font-size: 14px;
+      font-size: 13px;
     }
 
     table {
@@ -20,28 +20,33 @@
     }
 
     th, td {
-      border: 1px solid #333;
-      padding: 4px 6px;
+      border: 1px solid #2c2c2c;
+      padding: 6px 8px;
       text-align: center;
     }
 
     th {
-      background: #222;
+      background: #1a1a1a;
       font-weight: 600;
     }
 
-    input[type="number"], input[type="text"] {
+    tr.inactivo {
+      opacity: 0.5;
+      background-color: #181818;
+    }
+
+    input[type="number"], input[type="text"], select {
       background: #1e1e1e;
-      border: 1px solid #555;
+      border: 1px solid #444;
       color: #fff;
       padding: 4px;
       border-radius: 4px;
-      width: 60px;
+      width: 75px;
     }
 
-    input[type="text"] {
-      width: 90px;
-    }
+    input[type="text"] { width: 100px; }
+    select.api { width: 110px; }
+    select.estado { width: 110px; }
 
     .btn {
       padding: 6px 12px;
@@ -56,10 +61,8 @@
     .modal {
       display: none;
       position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
       background: rgba(0,0,0,0.7);
       justify-content: center;
       align-items: center;
@@ -69,8 +72,8 @@
       background: #222;
       padding: 20px;
       border-radius: 6px;
-      width: 95%;
-      max-width: 750px;
+      width: 90%;
+      max-width: 700px;
     }
 
     .close {
@@ -81,13 +84,13 @@
     }
 
     .table-scroll {
-      max-height: 320px;
+      max-height: 300px;
       overflow-y: auto;
     }
 
     #resumen-server4 {
       margin-top: 20px;
-      font-size: 15px;
+      font-size: 14px;
       background: #1a1a1a;
       padding: 12px;
       border-radius: 6px;
@@ -105,7 +108,7 @@
       <tr>
         <th>ID</th><th>Anuncio</th><th>Campaña</th><th>Cuenta</th>
         <th>Presupuesto</th><th>API</th><th>Estado</th>
-        <th>Leads</th><th>Cargas</th><th>Gasto Meta</th><th>Gasto + Imp</th>
+        <th>Leads</th><th>Cargas</th><th>Gasto</th><th>Gasto + Imp</th>
         <th>Conv %</th><th>$Lead</th><th>$Carga</th><th>$Carga + Imp</th>
       </tr>
     </thead>
@@ -114,21 +117,37 @@
 
   <div id="resumen-server4">Cargando resumen...</div>
 
-  <!-- Modal -->
+  <!-- Modal 1: Selección de anuncio -->
   <div id="adsModal" class="modal">
     <div class="modal-content">
       <span class="close" onclick="closeModal()">✖</span>
-      <h3>Seleccioná un anuncio para agregar</h3>
+      <h3>Seleccioná un anuncio</h3>
       <div class="table-scroll">
         <table id="adsTable">
           <thead>
-            <tr>
-              <th>ID</th><th>Anuncio</th><th>Campaña</th><th>Cuenta</th><th>CPC</th><th></th>
-            </tr>
+            <tr><th>ID</th><th>Anuncio</th><th>Campaña</th><th>Cuenta</th><th>CPC</th><th></th></tr>
           </thead>
           <tbody></tbody>
         </table>
       </div>
+    </div>
+  </div>
+
+  <!-- Modal 2: Ingreso de Presupuesto y API -->
+  <div id="configModal" class="modal">
+    <div class="modal-content">
+      <span class="close" onclick="closeConfigModal()">✖</span>
+      <h3>Configurá el anuncio</h3>
+      <p>Presupuesto: <input type="number" id="inputPresupuesto" /></p>
+      <p>API: 
+        <select id="inputAPI" class="api">
+          <option value="">Seleccionar</option>
+          <option value="VERONICA">VERONICA</option>
+          <option value="PERLA">PERLA</option>
+          <option value="MEREDITH">MEREDITH</option>
+        </select>
+      </p>
+      <button class="btn" onclick="confirmAd()">✅ Confirmar</button>
     </div>
   </div>
 
